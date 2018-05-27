@@ -1,0 +1,18 @@
+Requetes de test dans fiddler :
+
+GET http://127.0.0.1:7210/v1/websiteparser/api/service/test
+
+POST http://127.0.0.1:7210/v1/websiteparser/api/urls
+header :
+User-Agent: Fiddler
+Host: 127.0.0.1:7210
+Content-Type: text/json
+body:
+{
+	"urls": [
+		"https://fr.wikipedia.org/wiki/Louis_Armstrong",
+		"https://fr.wikipedia.org/wiki/Neil_Armstrong"
+		]
+}
+
+GET http://127.0.0.1:7210/v1/websiteparser/api/sentences

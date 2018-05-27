@@ -8,14 +8,16 @@
 #include "usr_interrupt_handler.h"
 
 #include "WebSiteParserRestController.h"
+#include "WebSiteParserCacheImpl.h"
 
 using namespace cfx;
+using namespace WebSiteParser;
 
 int main()
 {
 	InterruptHandler::hookSIGINT();
 
-	WebSiteParserRestController server;
+	WebSiteParserRestController server(std::make_unique<WebSiteParserCacheImpl>());
 	server.setEndpoint(L"http://127.0.0.1:7210/v1/websiteparser/api");
 
 	try {
