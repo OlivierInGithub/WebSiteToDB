@@ -49,6 +49,7 @@ What I would do with more time :
 1-Work on SupervisionTool to be a real REST API client. 
   For now to get status I have a timer trying to get status each 3s, which throws exception when server is not launched, which I have to catch. I'm pretty sure there must be a more satisfying way to do it.
   I'd like also to implement a GET sentences and GET statistics queries in C#.
+  And implement a dialog to setup configurations, at lease URLs and encryption secret.
   Plus some clean-up and add comments.
 2-Work on WebSiteParser to implement the 2 threads parsing 2 websites at a time. 
   And rather than random generation, try to really parse a website, maybe by limiting on Wikipedia pages to use its API.
