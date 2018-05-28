@@ -2,14 +2,17 @@ The purpose was to implement 3 distinct processes doing kind of atomic jobs, and
 To occasion was excellent to try microservices with REST APIs.
 First microservice is WebSiteParser : when given a list of URLS, this service connects to the web and provides the sentences parsed from each URL.
 Second microservice is SentenceEncrypter : when given a list of sentences, and an encryption secret, this service returns the encrypted sentences.
-Third microservice is DBSaver : when given a list of string with a category name (here the URL), it stores it in a database, keeping trace of the order.
+Third microservice is DBSaver : when given a json containing list of strings with a category name (here the URL), it stores it in a database, keeping trace of the order.
 These 3 services are in C++. I used Microsoft C++ Rest API to implement the Rest API servers. It looks great, quite simple to handle.
 The SupervisionTool is in C#. I used httpclient to implement the Rest API client, but I'm not sure it's the best choice, I just ran out of time.
 
 The third parties C+ libs are : boost, cpprestsdk, zlib, and openSSL.
 Just the .Net framework for C#.
 
-The API design was meant to be this way :
+The idea is that the SupervisionTool send URLs to WebSiteParser, get a bunch of sentences, send it to the SentenceEncrypter (send it the encryption secret too), get back the encrypted sentences, and send them to the DB saver.
+It could also get statistics from each server.
+
+The API design was meant to be this way (using bodies in json) :
 -WebSiteParser : 
 POST with the list of URLs to be parsed.
 GET status, just to know if process is ready.
@@ -27,9 +30,29 @@ POST a list of encrypted sentences per URL.
 GET status, just to know if process is ready.
 GET stats, to get the number of sentences stored, and the number of different URLs.
 
+This solution allow independant microservices, but it could generate heavy http queries traffic.
+Another solution would be that microservices discuss directly together, that would lower traffic, but the microservices wouldn't be independant anymore.
+
 Implementation limitations :
-I only had time to implement WebSiteParser, with a fake parser (returning random sentences). The api was tested using fiddler.
-The queries can be found in testQueries.txt. There's Get status, POST urls and Get sentences, but this latter is missing paging management.
-I also implemented the SupervisionTool, but it can only start/stop the WebSiteParser service, and get its status.
-Communication was done using http, but obviously, as we finish with encrypted data, it should use https.
-Please note I only deliver WebSiteParser in debug, I had no time to configure the release.
+-I only had time to implement WebSiteParser, with a fake parser (returning random sentences). The api was tested using Fiddler.
+ The queries can be found in testQueries.txt. There's GET status, POST urls and GET sentences, but this latter is missing paging management.
+-I also implemented the SupervisionTool, but it can only start/stop the WebSiteParser service, and get its status.
+-Communication was done using http, but obviously, as we finish with encrypted data, it should use https.
+-Please note I only deliver WebSiteParser in debug, I had no time to configure the release.
+
+What I have done :
+-WebSiteParser : the main is in WebSiteParser.cpp. It uses a WebSiteParserController, managing the REST API, and based on microsoft C++ Rest Api. The Rest queries are parsed/created in this file. A IWebSiteCache is provided that takes URLs and fills a map<URL, vector<sentences>>.
+This interface should be implemented by a class that can manage 2 website parsers in threads, but for now it is just WebSiteParserCacheImpl, that creates synchronously random sentences.
+-SupervisionTool : it is implemented in MainWindow.xaml.cs. The data are in SupervisionToolData.cs. The server watching process is in ProcessWatcher.cs
+
+What I would do with more time :
+1-Work on SupervisionTool to be a real REST API client. 
+  For now to get status I have a timer trying to get status each 3s, which throws exception when server is not launched, which I have to catch. I'm pretty sure there must be a more satisfying way to do it.
+  I'd like also to implement a GET sentences and GET statistics queries in C#.
+  Plus some clean-up and add comments.
+2-Work on WebSiteParser to implement the 2 threads parsing 2 websites at a time. 
+  And rather than random generation, try to really parse a website, maybe by limiting on Wikipedia pages to use its API.
+  Plus some clean-up, add comments, configure the release version. 
+3-Implement SentenceEncrypter and DBSaver. 
+  For SentenceEncrypter, I don't know much about encrytion tools, I guess OpenSSL can do the job.
+  For DBSaver, I'd have to think about which Database to use. As we're storing webpages, received in json format, a document based DB like MongoDB may be a good choice. For a start I could also do a mock saving in text files.
