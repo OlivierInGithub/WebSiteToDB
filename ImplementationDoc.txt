@@ -1,0 +1,35 @@
+The purpose was to implement 3 distinct processes doing kind of atomic jobs, and a supervision tool communication to all 3 processes.
+To occasion was excellent to try microservices with REST APIs.
+First microservice is WebSiteParser : when given a list of URLS, this service connects to the web and provides the sentences parsed from each URL.
+Second microservice is SentenceEncrypter : when given a list of sentences, and an encryption secret, this service returns the encrypted sentences.
+Third microservice is DBSaver : when given a list of string with a category name (here the URL), it stores it in a database, keeping trace of the order.
+These 3 services are in C++. I used Microsoft C++ Rest API to implement the Rest API servers. It looks great, quite simple to handle.
+The SupervisionTool is in C#. I used httpclient to implement the Rest API client, but I'm not sure it's the best choice, I just ran out of time.
+
+The third parties C+ libs are : boost, cpprestsdk, zlib, and openSSL.
+Just the .Net framework for C#.
+
+The API design was meant to be this way :
+-WebSiteParser : 
+POST with the list of URLs to be parsed.
+GET status, just to know if process is ready.
+GET stats, to get the number of sentences parsed per URL.
+GET sentences, organized by url, with paging.
+
+-SentenceEncrypter :
+PUT the encryption secret.
+POST a list of sentences to be encrypted. Can it return the encrypted sentences in the response body ? Else we need a GET.
+GET status, just to know if process is ready.
+GET stats, to get the number of encrypted sentences.
+
+-DBSaver :
+POST a list of encrypted sentences per URL.
+GET status, just to know if process is ready.
+GET stats, to get the number of sentences stored, and the number of different URLs.
+
+Implementation limitations :
+I only had time to implement WebSiteParser, with a fake parser (returning random sentences). The api was tested using fiddler.
+The queries can be found in testQueries.txt. There's Get status, POST urls and Get sentences, but this latter is missing paging management.
+I also implemented the SupervisionTool, but it can only start/stop the WebSiteParser service, and get its status.
+Communication was done using http, but obviously, as we finish with encrypted data, it should use https.
+Please note I only deliver WebSiteParser in debug, I had no time to configure the release.
